@@ -1,0 +1,29 @@
+# The headline sweep: the accuracy-vs-compute "lift curve" (DESIGN.md §1, §8 M6).
+#
+# NOTE: `crucible sweep` is implemented in M2. This file documents the intended grid
+# so it's ready when the command lands — it is not consumed yet.
+#
+# The sweep runs every (method × compute-budget) cell on the same problems + seeds and
+# plots accuracy against total generated tokens (policy + verifier).
+
+dataset: math500
+limit: 100
+seeds: [0, 1, 2]
+
+policy:
+  backend: ollama
+  model: qwen2.5-math-7b-instruct
+
+prm: qwen2.5-math-prm-7b
+
+grid:
+  - method: pass1
+  - method: best_of_n
+    n: [4, 8, 16, 32]
+  - method: beam
+    beam_width: [4]
+    n: [4, 8, 16]
+  - method: mcts
+    budget_tokens: [4000, 8000, 16000]
+
+output_dir: runs

@@ -1,0 +1,14 @@
+# Offline M0 demo run. Equivalent to:
+#   crucible run --method pass1 --dataset sample --policy mock
+# Run it with:
+#   crucible run --config configs/sample.yaml
+method: pass1
+dataset: sample
+n: 1
+seed: 0
+policy:
+  backend: mock
+  model: scripted
+  temperature: 0.7
+  max_tokens: 1024
+output_dir: runs

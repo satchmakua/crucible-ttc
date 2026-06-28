@@ -1,0 +1,33 @@
+# CI — lint, typecheck, and test on every push / PR.
+# Installs the base + dev deps only (no heavy ML extras: torch/transformers/vLLM
+# and live Ollama are not needed for the core test suite, which runs against the
+# mock backend). Keep it fast and hermetic.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Typecheck (mypy)
+        run: mypy src
+
+      - name: Test (pytest)
+        run: pytest -q
