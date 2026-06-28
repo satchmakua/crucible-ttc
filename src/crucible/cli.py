@@ -10,6 +10,7 @@ M2. Run the offline M0 demo with:
 from __future__ import annotations
 
 import contextlib
+import json
 import sys
 from pathlib import Path
 from typing import Annotated
@@ -20,7 +21,14 @@ from rich.console import Console
 
 from crucible import __version__
 from crucible.config import PolicyConfig, RunConfig
-from crucible.report import print_record, print_summary, read_summary, write_run_record
+from crucible.report import (
+    print_record,
+    print_summary,
+    print_sweep,
+    read_summary,
+    render_curve,
+    write_run_record,
+)
 from crucible.runner import run as run_experiment
 
 app = typer.Typer(
@@ -37,11 +45,17 @@ def run(
     dataset: Annotated[str, typer.Option(help="dataset (sample bundled; gsm8k/math500 in M1)")] = "sample",
     policy: Annotated[str, typer.Option(help="inference backend: mock | ollama | hosted")] = "mock",
     model: Annotated[str, typer.Option(help="policy model id for the chosen backend")] = "scripted",
-    n: Annotated[int, typer.Option(help="samples per problem")] = 1,
+    n: Annotated[int, typer.Option(help="samples per problem (best_of_n)")] = 1,
+    selection: Annotated[
+        str, typer.Option(help="best_of_n selector: majority | oracle")
+    ] = "majority",
     temperature: Annotated[float, typer.Option(help="sampling temperature")] = 0.7,
     max_tokens: Annotated[int, typer.Option(help="max tokens per generation")] = 1024,
     limit: Annotated[int | None, typer.Option(help="cap the number of problems")] = None,
     seed: Annotated[int, typer.Option(help="random seed")] = 0,
+    synthetic_accuracy: Annotated[
+        float, typer.Option(help="per-problem correctness for --policy synthetic")
+    ] = 0.5,
     config: Annotated[
         Path | None, typer.Option("--config", help="YAML config; if given, other flags are ignored")
     ] = None,
@@ -56,8 +70,10 @@ def run(
             method=method,
             dataset=dataset,
             n=n,
+            selection=selection,
             seed=seed,
             limit=limit,
+            synthetic_accuracy=synthetic_accuracy,
             policy=PolicyConfig(
                 backend=policy, model=model, temperature=temperature, max_tokens=max_tokens
             ),
@@ -83,9 +99,16 @@ def run(
 
 @app.command()
 def report(
-    run_dir: Annotated[Path, typer.Argument(help="a run directory written by `run`")],
+    run_dir: Annotated[Path, typer.Argument(help="a run or sweep directory")],
 ) -> None:
-    """Print the metrics from a past run directory."""
+    """Print metrics from a past run, or re-render a sweep's curve."""
+    sweep_json = run_dir / "sweep.json"
+    if sweep_json.exists():
+        cells = json.loads(sweep_json.read_text(encoding="utf-8"))
+        print_sweep(cells, console)
+        curve = render_curve(cells, run_dir / "curve.png")
+        console.print(f"[green]curve:[/green] {curve}")
+        return
     try:
         data = read_summary(run_dir)
     except FileNotFoundError as exc:
@@ -98,12 +121,23 @@ def report(
 def sweep(
     config: Annotated[Path, typer.Argument(help="a sweep YAML (grid of runs)")],
 ) -> None:
-    """Run a grid of experiments → the accuracy-vs-compute curve. (Lands in M2.)"""
-    console.print(
-        "[yellow]sweep[/yellow] is planned for milestone M2 (the headline "
-        "accuracy-vs-compute curve). See ROADMAP.md. Use `crucible run` for now."
-    )
-    raise typer.Exit(code=1)
+    """Run a grid of experiments → the accuracy-vs-compute curve."""
+    from crucible.sweep import run_sweep
+
+    try:
+        result = run_sweep(config)
+    except (NotImplementedError, ValueError, FileNotFoundError) as exc:
+        console.print(f"[red]error:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except httpx.HTTPError as exc:
+        console.print(
+            f"[red]error:[/red] inference backend unreachable ({type(exc).__name__}). {exc}"
+        )
+        raise typer.Exit(code=1) from exc
+
+    print_sweep(result.cells, console)
+    console.print(f"[green]curve:[/green] {result.curve_path}")
+    console.print(f"[green]sweep:[/green] {result.sweep_dir}")
 
 
 @app.command()

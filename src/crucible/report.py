@@ -155,3 +155,63 @@ def print_record(data: dict[str, Any], console: Console | None = None) -> None:
     table.add_row("total tokens", f"{data['compute']['total_tokens']:,}")
     table.add_row("verifier calls", f"{data['compute']['verifier_forward_calls']:,}")
     console.print(table)
+
+
+def _curve_label(cell: dict[str, Any]) -> str:
+    return "pass1" if cell["method"] == "pass1" else f"{cell['method']} ({cell['selection']})"
+
+
+def print_sweep(cells: list[dict[str, Any]], console: Console | None = None) -> None:
+    """Print a sweep's cells as an accuracy-vs-compute table."""
+    console = console or Console()
+    table = Table(title="sweep: accuracy vs compute", title_style="bold")
+    table.add_column("method")
+    table.add_column("N", justify="right")
+    table.add_column("accuracy", justify="right")
+    table.add_column("95% CI", justify="center")
+    table.add_column("tokens/problem", justify="right")
+    for cell in sorted(cells, key=lambda c: (_curve_label(c), c["mean_tokens"])):
+        table.add_row(
+            _curve_label(cell),
+            str(cell["n"]),
+            f"{cell['accuracy']:.1%}",
+            f"[{cell['accuracy_ci_low']:.0%}, {cell['accuracy_ci_high']:.0%}]",
+            f"{cell['mean_tokens']:.0f}",
+        )
+    console.print(table)
+
+
+def render_curve(cells: list[dict[str, Any]], out_path: str | Path) -> Path:
+    """Render the accuracy-vs-compute curve (one line per method/selector) to a PNG."""
+    import matplotlib
+
+    matplotlib.use("Agg")  # headless: no display needed
+    import matplotlib.pyplot as plt
+
+    out_path = Path(out_path)
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for cell in cells:
+        groups.setdefault(_curve_label(cell), []).append(cell)
+
+    fig, ax = plt.subplots(figsize=(7.0, 4.5))
+    for label, items in sorted(groups.items()):
+        pts = sorted(items, key=lambda c: c["mean_tokens"])
+        xs = [c["mean_tokens"] for c in pts]
+        ys = [c["accuracy"] for c in pts]
+        # max(0, …) guards floating-point cases where a clamped Wilson bound lands a
+        # hair past an accuracy of exactly 0 or 1 (matplotlib rejects negative yerr).
+        yerr_lo = [max(0.0, c["accuracy"] - c["accuracy_ci_low"]) for c in pts]
+        yerr_hi = [max(0.0, c["accuracy_ci_high"] - c["accuracy"]) for c in pts]
+        ax.errorbar(xs, ys, yerr=[yerr_lo, yerr_hi], marker="o", capsize=3, label=label)
+
+    ax.set_xscale("log")
+    ax.set_xlabel("total tokens per problem (policy + verifier)")
+    ax.set_ylabel("accuracy")
+    ax.set_ylim(0.0, 1.0)
+    ax.set_title("Accuracy vs test-time compute")
+    ax.grid(visible=True, which="both", alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+    return out_path

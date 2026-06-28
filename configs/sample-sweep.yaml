@@ -1,0 +1,26 @@
+# Offline best-of-N lift curve — runs cold (no GPU/network) on the synthetic backend.
+#   crucible sweep configs/sample-sweep.yaml
+#
+# The synthetic policy simulates a ~55%-accurate policy (pass@1 baseline). best-of-N
+# should lift accuracy as N grows — majority converging on the (correct) mode since the
+# base policy is >50%, and oracle rising fastest (a problem counts solved if *any* of
+# the N samples is correct). With a <50% policy, majority would instead converge to the
+# wrong answer — a real effect worth seeing; try synthetic_accuracy: 0.45 to observe it.
+# (Only 6 bundled problems, so expect noise; real curves use gsm8k with more problems.)
+dataset: sample
+seed: 0
+synthetic_accuracy: 0.55
+policy:
+  backend: synthetic
+  model: sim
+
+grid:
+  - method: pass1
+  - method: best_of_n
+    selection: majority
+    n: [2, 4, 8, 16, 32]
+  - method: best_of_n
+    selection: oracle
+    n: [2, 4, 8, 16, 32]
+
+output_dir: runs

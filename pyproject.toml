@@ -90,5 +90,6 @@ module = [
     "math_verify.*",
     "sympy.*",
     "datasets.*",
+    "matplotlib.*",
 ]
 ignore_missing_imports = true

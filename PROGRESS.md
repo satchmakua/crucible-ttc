@@ -5,8 +5,8 @@ this is the working memory between build sessions. The forward-looking plan and
 acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 "what got done and why" companion.
 
-**Current phase:** M1 built (awaiting the human's live-Ollama test). Next up: **M2**
-(best-of-N + the accuracy-vs-compute curve).
+**Current phase:** M1 + M2 built (M1 awaits a live-Ollama test; M2 self-verified cold).
+Next up: **M3** (PRM integration — the learned process verifier).
 
 ## State of the tree
 
@@ -18,6 +18,7 @@ acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 | Step segmentation + token approx | `segment.py` | ✅ M0 (used fully in M4) |
 | Wilson CIs | `stats.py` | ✅ M0 |
 | Mock policy (ScriptedPolicy) | `inference/mock.py` | ✅ M0 |
+| Synthetic policy (seeded sim) | `inference/synthetic.py` | ✅ M2 |
 | Ollama policy | `inference/ollama.py` | ✅ M1 |
 | Math CoT prompt builder | `prompts.py` | ✅ M1 |
 | Answer extraction | `verify/answer_extract.py` | ✅ M0 |
@@ -25,16 +26,57 @@ acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 | PRM (process verifier) | `verify/` | ⬜ M3 |
 | Code-execution verifier | `verify/` | ⬜ M5 |
 | pass1 strategy + registry | `search/` | ✅ M0 |
-| best_of_n / beam / mcts | `search/` | ⬜ M2 / M4 / M6 |
+| best_of_n (majority/oracle) | `search/best_of_n.py` | ✅ M2 |
+| beam / mcts | `search/` | ⬜ M4 / M6 |
 | Sample dataset + registry | `data/` | ✅ M0 |
 | GSM8K + MATH-500 loaders | `data/hf.py` | ✅ M1 |
 | Code dataset loaders (HumanEval/MBPP) | `data/` | ⬜ M5 |
 | Experiment runner | `runner.py` | ✅ M0 |
 | Run records (JSON/CSV) + summary | `report.py` | ✅ M0 |
-| Accuracy-vs-compute curve | `report.py` | ⬜ M2 |
-| CLI (run/report/sweep/version) | `cli.py` | ✅ M0 (sweep stubbed → M2) |
+| Sweep + accuracy-vs-compute curve | `sweep.py`, `report.py` | ✅ M2 |
+| CLI (run/report/sweep/version) | `cli.py` | ✅ M2 (all real) |
 
 ---
+
+## M2 — Best-of-N + the accuracy-vs-compute curve · built 2026-06-27 · self-verified cold
+
+The first **measured lift** and the project's headline artifact — the
+accuracy-vs-compute curve — now exist, demonstrated end-to-end without a model.
+
+**What shipped:**
+- **`best_of_n` strategy** with two selectors: **majority** (vote on extracted answers,
+  verifier-free) and **oracle** (first trace the outcome verifier passes — an upper
+  bound that "cheats" with gold). The returned trace's `Compute` accounts for *all N*
+  samples plus any selection-time verifier calls, so the curve's x-axis is honest.
+- **`SyntheticPolicy`** — a seeded simulator of a policy with a known accuracy (correct
+  trace w.p. `synthetic_accuracy`, else a distractor). Makes test-time scaling
+  deterministic and analysable (pass@1 ≈ p; oracle@N ≈ 1-(1-p)^N) so the curve can be
+  produced and unit-tested cold.
+- **`sweep`** (`sweep.py`) — expands a base config + `grid:` (cartesian over list-valued
+  fields like `n: [4,8,16]`) into runs, writes each record under one sweep dir, and
+  aggregates `sweep.json`.
+- **The curve** (`report.render_curve`) — matplotlib (Agg, headless) accuracy-vs-**total
+  tokens/problem** (log x), one line per method/selector, with Wilson error bars →
+  `curve.png`. `report` re-renders it from a sweep dir; `crucible run` gained
+  `--selection` and `--synthetic-accuracy`.
+- `configs/sample-sweep.yaml` — an offline lift-curve demo (synthetic backend).
+
+**How it was verified (cold, no model):**
+- `ruff` clean; `mypy src` clean (28 files); `pytest` → **53 passed** (10 new).
+- `crucible sweep configs/sample-sweep.yaml` produces a valid 840×540 `curve.png`:
+  pass@1 ≈ 83% (6-problem noise), oracle best-of-N → 100% by N=4, majority → 100% by
+  N=32, tokens/problem scaling ~N× — i.e. accuracy rising with compute, the headline
+  result. Selection logic + compute accounting + grid expansion are unit-tested; an
+  end-to-end sweep test asserts oracle@16 ≥ pass@1 and uses more tokens.
+
+**Gotchas / notes:**
+- Matplotlib yerr must be non-negative; a clamped Wilson bound can land a hair past an
+  accuracy of exactly 1.0, so `render_curve` clamps the error bars with `max(0, …)`.
+- The demo uses a >50% synthetic policy so **majority** converges to the *correct*
+  answer; with <50% it converges to the *wrong* one (self-consistency's known failure)
+  — `oracle` is the reliable upper-bound line. Curves are noisy on only 6 problems.
+- PRM-weighted selection (the third line) is M3; the majority-vs-oracle-vs-PRM
+  comparison on the *same* samples will likely want a runner tweak then.
 
 ## M1 — Ollama backend + real pass@1 on GSM8K · built 2026-06-27 · awaiting test
 

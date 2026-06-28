@@ -9,10 +9,11 @@ Most people only *consume* reasoning models; Crucible builds the machinery under
 and **measures the lift** — accuracy as a function of test-time compute over a small
 open policy model. The full design and rationale live in [DESIGN.md](DESIGN.md).
 
-**Status:** **M0 shipped; M1 built (awaiting a live-Ollama test).** The engine runs
-end-to-end offline on a bundled sample, and can now run real pass@1 on GSM8K/MATH-500
-through a local Ollama server. See [ROADMAP.md](ROADMAP.md) for the plan and
-[PROGRESS.md](PROGRESS.md) for what's done. Next: M2 (best-of-N + the lift curve).
+**Status:** **M0 shipped; M1 + M2 built.** The engine runs end-to-end offline, can run
+real pass@1 on GSM8K/MATH-500 through a local Ollama server (M1, awaiting a live test),
+and produces the headline **accuracy-vs-compute curve** for best-of-N search (M2,
+self-verified on a synthetic backend). See [ROADMAP.md](ROADMAP.md) for the plan and
+[PROGRESS.md](PROGRESS.md) for what's done. Next: M3 (PRM — the learned verifier).
 
 ---
 
@@ -41,6 +42,13 @@ pip install -e ".[datasets]"
 ollama pull qwen2.5-math-1.5b-instruct      # or any small instruct model
 python -m crucible run --method pass1 --dataset gsm8k --policy ollama `
     --model qwen2.5-math-1.5b-instruct --limit 20
+```
+
+**The lift curve (M2):** produce the headline accuracy-vs-compute curve offline (no
+model needed — it uses a synthetic policy):
+
+```powershell
+python -m crucible sweep configs/sample-sweep.yaml   # writes runs/sweep-*/curve.png
 ```
 
 ### Commands

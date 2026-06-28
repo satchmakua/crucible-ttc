@@ -45,11 +45,15 @@ unchecked milestone.
 
 - [ ] **M2 — Best-of-N + the lift curve.** Add the `best_of_n` strategy (majority@N
   and oracle-best-of-N selection) and the `sweep`/`report` accuracy-vs-compute curve
-  (pandas + matplotlib), plotting accuracy against **total tokens** (compute
-  accounting made visible). Run on GSM8K + MATH-500.
-  **Test:** `crucible sweep configs/lift-curve.yaml` (a small grid) then
-  `crucible report <run>` renders a PNG curve where best-of-N@16 > pass@1, with the
-  verifier's compute counted on the x-axis.
+  (matplotlib), plotting accuracy against **total tokens** (compute accounting made
+  visible).
+  _(Built and self-verified 2026-06-27 on the offline synthetic backend — `curve.png`
+  shows best-of-N rising above pass@1 with compute on the x-axis; review it / run a
+  real-model sweep, then check this box.)_
+  **Test (offline, runs cold):** `crucible sweep configs/sample-sweep.yaml` then
+  `crucible report <sweep_dir>` → a `curve.png` where best-of-N (oracle, and majority
+  for a >50% policy) rises above pass@1, with tokens on the x-axis. **Real-model
+  variant:** point a sweep at `dataset: gsm8k`, `backend: ollama` (needs M1's setup).
 
 - [ ] **M3 — PRM integration (learned verifier).** Add a `ProcessVerifier` adapter for
   an open PRM (transformers/`prm` extra); **PRM-weighted best-of-N**; report
