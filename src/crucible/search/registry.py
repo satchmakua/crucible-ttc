@@ -5,19 +5,19 @@ from __future__ import annotations
 from crucible.domain.ports import SearchStrategy
 from crucible.search.beam import BeamStrategy
 from crucible.search.best_of_n import BestOfNStrategy
+from crucible.search.mcts import MCTSStrategy
 from crucible.search.pass1 import Pass1Strategy
 
-# Implemented now. mcts (M6) is the remaining method.
+# The full search ladder.
 _STRATEGIES: dict[str, type[SearchStrategy]] = {
     "pass1": Pass1Strategy,
     "best_of_n": BestOfNStrategy,
     "beam": BeamStrategy,
+    "mcts": MCTSStrategy,
 }
 
-# Known-but-not-yet-built methods, so the CLI can give a milestone-aware message.
-_PLANNED = {
-    "mcts": "M6",
-}
+# Reserved for any future method names (none pending).
+_PLANNED: dict[str, str] = {}
 
 
 def available_methods() -> list[str]:

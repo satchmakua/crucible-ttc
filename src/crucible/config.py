@@ -46,6 +46,10 @@ class RunConfig:
     beam_width: int = 4  # partial traces kept each round (k)
     beam_expansions: int = 4  # continuations sampled per partial each round (m)
     max_steps: int = 8  # hard cap on beam depth
+    # MCTS (M6): PUCT exploration constant + a hard cap on simulations (budget_tokens
+    # is the primary stop; this just bounds runaway when the budget is large).
+    mcts_c_puct: float = 1.4
+    mcts_max_sims: int = 200
     # Synthetic stepwise task (M4 demo): a `step_depth`-step process, each step good
     # with probability `step_accuracy`; the step PRM's skill is `step_prm_accuracy`.
     step_accuracy: float = 0.6

@@ -10,12 +10,14 @@ from __future__ import annotations
 
 from crucible.search.beam import BeamStrategy
 from crucible.search.best_of_n import BestOfNStrategy
+from crucible.search.mcts import MCTSStrategy
 from crucible.search.pass1 import Pass1Strategy
 from crucible.search.registry import available_methods, get_strategy
 
 __all__ = [
     "BeamStrategy",
     "BestOfNStrategy",
+    "MCTSStrategy",
     "Pass1Strategy",
     "available_methods",
     "get_strategy",
