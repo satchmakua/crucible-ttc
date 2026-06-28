@@ -1,0 +1,28 @@
+# Beam vs best-of-N at matched compute, offline (the synthetic stepwise task).
+#   crucible sweep configs/beam-sweep.yaml
+#
+# Each problem needs a 5-step chain where every step is good (p=0.6 per step, so only
+# ~8% of full samples are all-good). best-of-N must pay for that exponentially; beam,
+# guided by the step PRM, prunes bad partials and assembles a good chain cheaply — so on
+# the accuracy-vs-compute curve the beam line sits above best-of-N at matched tokens.
+dataset: sample
+seed: 0
+prm: step
+step_accuracy: 0.6
+step_depth: 5
+step_prm_accuracy: 0.95
+policy:
+  backend: stepwise
+  model: sim
+
+grid:
+  - method: pass1
+  - method: best_of_n
+    selection: prm
+    n: [4, 8, 16, 32, 64]
+  - method: beam
+    beam_expansions: 4
+    max_steps: 8
+    beam_width: [1, 2, 4, 8]
+
+output_dir: runs

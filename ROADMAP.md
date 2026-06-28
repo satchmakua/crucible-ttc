@@ -65,11 +65,17 @@ unchecked milestone.
   passes counted). **Real-model variant:** `crucible compare --policy ollama --model
   <m> --dataset gsm8k --prm <qwen-prm-id>` (needs the `prm` extra + a GPU).
 
-- [ ] **M4 — Step segmentation + beam/DVTS.** Use the step abstraction for real:
-  PRM-guided beam search (Diverse Verifier Tree Search). Plot beam vs best-of-N at
-  matched compute (expect beam to win on harder MATH-500).
-  **Test:** `crucible run --method beam --beam-width 4 --dataset math500 ...` beats
-  best-of-N at the same token budget on the hard subset.
+- [ ] **M4 — Step segmentation + beam/DVTS.** PRM-guided beam search over the step port
+  (`sample_step`): expand top-k partials, score with the PRM, prune; plot beam vs
+  best-of-N at matched compute.
+  _(Built and self-verified 2026-06-27 on a synthetic stepwise task — the curve shows
+  beam reaching 100% at ~half the tokens best-of-N needs; run a real-model beam, then
+  check this box.)_
+  **Test (offline, runs cold):** `crucible sweep configs/beam-sweep.yaml` → a `curve.png`
+  where the **beam** line sits above **best_of_n** at matched tokens (beam hits 100% at
+  ~1.1k tok/problem vs ~2.4k for best-of-N; pass1 ≈ 0%). **Real-model variant:**
+  `crucible run --method beam --beam-width 4 --dataset math500 --policy ollama --prm
+  <qwen-prm>` should beat best-of-N at the same token budget on the hard subset.
 
 ## Phase 2 — Code, then the hardest search
 

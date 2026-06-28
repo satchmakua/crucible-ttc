@@ -9,12 +9,12 @@ Most people only *consume* reasoning models; Crucible builds the machinery under
 and **measures the lift** — accuracy as a function of test-time compute over a small
 open policy model. The full design and rationale live in [DESIGN.md](DESIGN.md).
 
-**Status:** **M0 shipped; M1–M3 built.** The engine runs end-to-end offline, runs real
+**Status:** **M0 shipped; M1–M4 built.** The engine runs end-to-end offline, runs real
 pass@1 on GSM8K/MATH-500 via a local Ollama server (M1, awaiting a live test), produces
-the headline **accuracy-vs-compute curve** for best-of-N (M2), and compares
-majority/PRM/oracle selection on the same samples to expose the **PRM selection gap**
-(M3) — M2 and M3 self-verified on synthetic backends. See [ROADMAP.md](ROADMAP.md) and
-[PROGRESS.md](PROGRESS.md). Next: M4 (step segmentation + PRM-guided beam search).
+the **accuracy-vs-compute curve** for best-of-N (M2), exposes the **PRM selection gap**
+(majority/PRM/oracle on the same samples, M3), and runs **PRM-guided beam search** that
+beats best-of-N at matched compute (M4) — M2–M4 self-verified on synthetic backends. See
+[ROADMAP.md](ROADMAP.md) and [PROGRESS.md](PROGRESS.md). Next: M5 (the code track).
 
 ---
 
@@ -57,6 +57,13 @@ best-of-N samples (offline, mock PRM):
 
 ```powershell
 python -m crucible compare   # writes runs/compare-*/comparison.png (oracle >= prm >= majority)
+```
+
+**Beam vs best-of-N at matched compute (M4):** PRM-guided beam search on a synthetic
+stepwise task, offline:
+
+```powershell
+python -m crucible sweep configs/beam-sweep.yaml   # beam line beats best-of-N on the curve
 ```
 
 ### Commands

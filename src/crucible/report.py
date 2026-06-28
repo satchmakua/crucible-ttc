@@ -158,7 +158,10 @@ def print_record(data: dict[str, Any], console: Console | None = None) -> None:
 
 
 def _curve_label(cell: dict[str, Any]) -> str:
-    return "pass1" if cell["method"] == "pass1" else f"{cell['method']} ({cell['selection']})"
+    method = cell["method"]
+    if method == "best_of_n":
+        return f"best_of_n ({cell['selection']})"
+    return str(method)  # pass1, beam, mcts, …
 
 
 def print_sweep(cells: list[dict[str, Any]], console: Console | None = None) -> None:

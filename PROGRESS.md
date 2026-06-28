@@ -5,8 +5,8 @@ this is the working memory between build sessions. The forward-looking plan and
 acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 "what got done and why" companion.
 
-**Current phase:** M1–M3 built (M1 awaits a live-Ollama test; M2 + M3 self-verified
-cold). Next up: **M4** (step segmentation + PRM-guided beam / DVTS).
+**Current phase:** M1–M4 built (M1 awaits a live-Ollama test; M2–M4 self-verified cold).
+Next up: **M5** (the code track — sandboxed execution verifier + HumanEval/MBPP).
 
 ## State of the tree
 
@@ -19,6 +19,7 @@ cold). Next up: **M4** (step segmentation + PRM-guided beam / DVTS).
 | Wilson CIs | `stats.py` | ✅ M0 |
 | Mock policy (ScriptedPolicy) | `inference/mock.py` | ✅ M0 |
 | Synthetic policy (seeded sim) | `inference/synthetic.py` | ✅ M2 |
+| Stepwise policy + step PRM (demo pair) | `synthetic_stepwise.py` | ✅ M4 |
 | Ollama policy | `inference/ollama.py` | ✅ M1 |
 | Math CoT prompt builder | `prompts.py` | ✅ M1 |
 | Answer extraction | `verify/answer_extract.py` | ✅ M0 |
@@ -27,7 +28,8 @@ cold). Next up: **M4** (step segmentation + PRM-guided beam / DVTS).
 | Code-execution verifier | `verify/` | ⬜ M5 |
 | pass1 strategy + registry | `search/` | ✅ M0 |
 | best_of_n + selectors (maj/oracle/prm) | `search/best_of_n.py`, `search/selectors.py` | ✅ M3 |
-| beam / mcts | `search/` | ⬜ M4 / M6 |
+| beam / DVTS | `search/beam.py` | ✅ M4 |
+| mcts | `search/` | ⬜ M6 |
 | Sample dataset + registry | `data/` | ✅ M0 |
 | GSM8K + MATH-500 loaders | `data/hf.py` | ✅ M1 |
 | Code dataset loaders (HumanEval/MBPP) | `data/` | ⬜ M5 |
@@ -38,6 +40,43 @@ cold). Next up: **M4** (step segmentation + PRM-guided beam / DVTS).
 | CLI (run/report/sweep/compare/version) | `cli.py` | ✅ M3 (all real) |
 
 ---
+
+## M4 — Step segmentation + PRM-guided beam (DVTS) · built 2026-06-27 · self-verified cold
+
+The first strategy that searches over *steps* rather than whole traces — and the first
+to reproduce the headline test-time-search result (beam > best-of-N at matched compute).
+
+**What shipped:**
+- **`BeamStrategy`** (`search/beam.py`): each round, expand every non-terminal partial
+  by `beam_expansions` continuations via `policy.sample_step`, score each partial with
+  the PRM, keep the top `beam_width`; carry terminal partials forward; stop when the
+  beam is all-terminal or `max_steps` is hit. Compute counts **every** policy step
+  sampled and **every** PRM forward pass (its tokens on the honest axis).
+- **A synthetic stepwise task** (`synthetic_stepwise.py`): `StepwisePolicy` (a D-step
+  process, each step good w.p. `step_accuracy`, emits the gold answer only if *all*
+  steps are good) + `StepRewardPRM` (scores partials by their step markers). This is the
+  regime where step-level pruning wins, so beam's advantage is demonstrable cold.
+- **`has_explicit_answer`** in `answer_extract` — a terminal check that looks for an
+  actual `\boxed`/"answer is" marker, not the bare-number fallback.
+- Config: `beam_width` / `beam_expansions` / `max_steps`, `step_accuracy` / `step_depth`
+  / `step_prm_accuracy`; backends `stepwise` and PRM `step` wired into the runner.
+
+**How it was verified (cold, no model):**
+- `ruff` clean; `mypy src` clean (32 files); `pytest` → **72 passed** (9 new).
+- `crucible sweep configs/beam-sweep.yaml` (5-step task, p=0.6/step) → on the curve,
+  **beam reaches 100% at ~1.1k tokens/problem (width 2) while best-of-N needs ~2.4k
+  (N=32)**, and pass1 is 0%. Beam sits above best-of-N at matched compute — the Snell
+  result. Tests assert beam needs a PRM, solves the task (≥80%), out-scores best-of-N,
+  and counts policy + verifier compute.
+
+**Gotchas (a real bug caught here):**
+- The first beam build mistook every partial for terminal because `extract_final_answer`'s
+  number fallback matched "Step 2" — beam never expanded and scored 1/6 (only the problem
+  whose gold is "1"). Fixed with the explicit-answer terminal check; **note for the real
+  policy**: terminal detection keys on `\boxed`/"answer is", so the CoT prompt must elicit
+  one (it does).
+- width=1 beam is greedy and can get stuck (66.7% vs 100% for width≥2) — a nice
+  illustration that beam needs width to be robust.
 
 ## M3 — PRM integration + the selection gap · built 2026-06-27 · self-verified cold
 

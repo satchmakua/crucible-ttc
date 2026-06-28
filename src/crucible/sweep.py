@@ -44,10 +44,12 @@ def cell_metrics(summary: RunSummary) -> dict[str, Any]:
     """One row of the sweep table — accuracy and mean per-problem compute."""
     low, high = summary.accuracy_ci
     denom = summary.total or 1
+    # The knob that varies along a method's line: beam width for beam, else N samples.
+    knob = summary.config.beam_width if summary.config.method == "beam" else summary.config.n
     return {
         "method": summary.config.method,
         "selection": summary.config.selection,
-        "n": summary.config.n,
+        "n": knob,
         "total": summary.total,
         "correct": summary.correct,
         "accuracy": summary.accuracy,

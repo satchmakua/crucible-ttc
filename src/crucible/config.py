@@ -36,12 +36,21 @@ class RunConfig:
     seed: int = 0
     synthetic_accuracy: float = 0.5  # per-problem correctness for the synthetic backend
     policy: PolicyConfig = field(default_factory=PolicyConfig)
-    prm: str | None = None  # process-reward model id ("mock" for the seeded simulator)
+    prm: str | None = None  # process-reward model id ("mock"/"step" for simulators)
     prm_accuracy: float = 0.8  # skill of the mock PRM (1.0 ≈ oracle, 0.5 ≈ random)
     prm_aggregate: str = "mean"  # how to reduce per-step PRM scores: mean | min | last | prod
     segmentation: str = "double_newline"
     max_step_tokens: int = 512
     budget_tokens: int | None = None
+    # Beam search (M4).
+    beam_width: int = 4  # partial traces kept each round (k)
+    beam_expansions: int = 4  # continuations sampled per partial each round (m)
+    max_steps: int = 8  # hard cap on beam depth
+    # Synthetic stepwise task (M4 demo): a `step_depth`-step process, each step good
+    # with probability `step_accuracy`; the step PRM's skill is `step_prm_accuracy`.
+    step_accuracy: float = 0.6
+    step_depth: int = 4
+    step_prm_accuracy: float = 0.95
     output_dir: str = "runs"
 
     def to_dict(self) -> dict[str, Any]:

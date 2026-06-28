@@ -24,6 +24,16 @@ def _clean(s: str) -> str:
     return s.strip().strip("$").strip().rstrip(".").strip()
 
 
+def has_explicit_answer(text: str) -> bool:
+    r"""True if `text` has an explicit final-answer marker (``\boxed`` / "answer is").
+
+    Deliberately ignores the bare-number fallback that `extract_final_answer` uses, so a
+    mid-reasoning "Step 2" isn't mistaken for a final answer — this is how search decides
+    whether a partial trace is *terminal*.
+    """
+    return bool(_BOXED.search(text) or _ANSWER_PHRASE.search(text))
+
+
 def extract_final_answer(text: str) -> str | None:
     """Best-effort extraction of the final answer string from `text`."""
     if not text:

@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from crucible.domain.ports import SearchStrategy
+from crucible.search.beam import BeamStrategy
 from crucible.search.best_of_n import BestOfNStrategy
 from crucible.search.pass1 import Pass1Strategy
 
-# Implemented now. Later milestones register beam (M4) and mcts (M6).
+# Implemented now. mcts (M6) is the remaining method.
 _STRATEGIES: dict[str, type[SearchStrategy]] = {
     "pass1": Pass1Strategy,
     "best_of_n": BestOfNStrategy,
+    "beam": BeamStrategy,
 }
 
 # Known-but-not-yet-built methods, so the CLI can give a milestone-aware message.
 _PLANNED = {
-    "beam": "M4",
     "mcts": "M6",
 }
 

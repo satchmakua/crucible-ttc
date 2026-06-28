@@ -19,6 +19,7 @@ from crucible.inference import OllamaPolicy, ScriptedPolicy, SyntheticPolicy
 from crucible.search import get_strategy
 from crucible.search.selectors import SELECTORS
 from crucible.stats import wilson_interval
+from crucible.synthetic_stepwise import StepRewardPRM, StepwisePolicy
 from crucible.verify import (
     MathOutcomeVerifier,
     MockProcessVerifier,
@@ -70,6 +71,10 @@ def build_policy(config: RunConfig) -> PolicyModel:
             seed=config.seed,
             max_step_tokens=config.max_step_tokens,
         )
+    if backend == "stepwise":
+        return StepwisePolicy(
+            step_accuracy=config.step_accuracy, depth=config.step_depth, seed=config.seed
+        )
     if backend == "ollama":
         return OllamaPolicy(config.policy.model, max_step_tokens=config.max_step_tokens)
     if backend == "hosted":
@@ -91,6 +96,8 @@ def build_process_verifier(config: RunConfig) -> ProcessVerifier | None:
         return None
     if config.prm == "mock":
         return MockProcessVerifier(accuracy=config.prm_accuracy, seed=config.seed)
+    if config.prm == "step":
+        return StepRewardPRM(accuracy=config.step_prm_accuracy, seed=config.seed)
     return PRMVerifier(config.prm)
 
 
