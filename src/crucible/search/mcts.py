@@ -31,9 +31,9 @@ _DEFAULT_BUDGET_TOKENS = 4000
 @dataclass
 class _Node:
     steps: list[Step]
-    parent: "_Node | None"
+    parent: _Node | None
     terminal: bool
-    children: list["_Node"] = field(default_factory=list)
+    children: list[_Node] = field(default_factory=list)
     visits: int = 0
     value_sum: float = 0.0
 
@@ -75,17 +75,31 @@ class MCTSStrategy:
         best_value = float("-inf")
         sims = 0
 
+        def evaluate(node: _Node) -> float:
+            nonlocal compute, best, best_value
+            scores = process.score_steps(problem, node.steps)
+            compute = compute + Compute(
+                verifier_forward_calls=1,
+                verifier_gen_tokens=sum(s.token_count for s in node.steps),
+            )
+            value = aggregate_scores(scores, config.prm_aggregate)
+            if node.terminal and value > best_value:
+                best_value, best = value, node
+            return value
+
         while compute.total_tokens < budget and sims < config.mcts_max_sims:
             sims += 1
 
-            # 1. Select a leaf.
+            # 1. Select a leaf by PUCT.
             node = root
             path = [root]
             while node.expanded and not node.terminal:
                 node = self._best_child(node, c_puct)
                 path.append(node)
 
-            # 2. Expand it (unless terminal or depth-capped).
+            # 2. Expand the leaf, evaluating every child to seed its value; the node's
+            #    backed-up value is its best child (terminal/depth-capped leaves are
+            #    valued directly).
             if not node.terminal and len(node.steps) < config.max_steps:
                 next_steps = policy.sample_step(
                     problem,
@@ -100,23 +114,15 @@ class MCTSStrategy:
                 )
                 for step in next_steps:
                     child_steps = [*node.steps, step]
-                    node.children.append(
-                        _Node(steps=child_steps, parent=node, terminal=_terminal(child_steps))
-                    )
-                if node.children:
-                    node = node.children[0]
-                    path.append(node)
+                    child = _Node(steps=child_steps, parent=node, terminal=_terminal(child_steps))
+                    child.value_sum = evaluate(child)
+                    child.visits = 1
+                    node.children.append(child)
+                value = max((c.q for c in node.children), default=evaluate(node))
+            else:
+                value = evaluate(node)
 
-            # 3. Evaluate the node with the PRM.
-            scores = process.score_steps(problem, node.steps)
-            compute = compute + Compute(
-                verifier_forward_calls=1, verifier_gen_tokens=sum(s.token_count for s in node.steps)
-            )
-            value = aggregate_scores(scores, config.prm_aggregate)
-            if node.terminal and value > best_value:
-                best_value, best = value, node
-
-            # 4. Backup.
+            # 3. Backup along the selected path.
             for visited in path:
                 visited.visits += 1
                 visited.value_sum += value

@@ -44,8 +44,15 @@ def cell_metrics(summary: RunSummary) -> dict[str, Any]:
     """One row of the sweep table — accuracy and mean per-problem compute."""
     low, high = summary.accuracy_ci
     denom = summary.total or 1
-    # The knob that varies along a method's line: beam width for beam, else N samples.
-    knob = summary.config.beam_width if summary.config.method == "beam" else summary.config.n
+    # The knob that varies along a method's line: beam width for beam, token budget for
+    # mcts, else N samples.
+    cfg = summary.config
+    if cfg.method == "beam":
+        knob = cfg.beam_width
+    elif cfg.method == "mcts":
+        knob = cfg.budget_tokens or 0
+    else:
+        knob = cfg.n
     return {
         "method": summary.config.method,
         "selection": summary.config.selection,

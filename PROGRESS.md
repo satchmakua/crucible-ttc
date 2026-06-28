@@ -5,8 +5,9 @@ this is the working memory between build sessions. The forward-looking plan and
 acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 "what got done and why" companion.
 
-**Current phase:** M1–M5 built (M1 awaits a live-Ollama test; M2–M5 self-verified cold).
-Next up: **M6** (MCTS over reasoning steps — the headline method).
+**Current phase:** M1–M6 built (M1 awaits a live-Ollama test; M2–M6 self-verified cold).
+The full search ladder (pass1 → best-of-N → beam → MCTS) is implemented. Next up: **M7**
+(compute-optimal analysis + the written results report — the deliverable).
 
 ## State of the tree
 
@@ -29,7 +30,7 @@ Next up: **M6** (MCTS over reasoning steps — the headline method).
 | pass1 strategy + registry | `search/` | ✅ M0 |
 | best_of_n + selectors (maj/oracle/prm) | `search/best_of_n.py`, `search/selectors.py` | ✅ M3 |
 | beam / DVTS | `search/beam.py` | ✅ M4 |
-| mcts | `search/` | ⬜ M6 |
+| mcts (PUCT over steps) | `search/mcts.py` | ✅ M6 |
 | Sample dataset + registry | `data/` | ✅ M0 |
 | GSM8K + MATH-500 loaders | `data/hf.py` | ✅ M1 |
 | Code datasets: bundled + HumanEval/MBPP | `data/code_sample.py`, `data/hf.py` | ✅ M5 |
@@ -40,6 +41,41 @@ Next up: **M6** (MCTS over reasoning steps — the headline method).
 | CLI (run/report/sweep/compare/version) | `cli.py` | ✅ M3 (all real) |
 
 ---
+
+## M6 — MCTS over reasoning steps · built 2026-06-28 · self-verified cold
+
+The top of the search ladder: PUCT Monte Carlo Tree Search over the step tree, valued by
+the PRM (rStar-Math's recipe minus the training loop). Completes the ladder.
+
+**What shipped:**
+- **`MCTSStrategy`** (`search/mcts.py`): selection (PUCT: `Q + c·P·√N_parent/(1+N_child)`,
+  uniform prior) → expansion (sample `beam_expansions` continuations via `sample_step`,
+  evaluate **each** child with the PRM to seed its value) → backup of the best child
+  value up the path. Terminal = an explicit `\boxed`/"answer is" marker. Budgeted by
+  `budget_tokens` (total policy + verifier tokens) with an `mcts_max_sims` safety cap.
+  Every step sampled and every PRM forward pass is counted.
+- The search registry is now the **full ladder**: `pass1`, `best_of_n`, `beam`, `mcts`.
+- `configs/beam-sweep.yaml` extended to plot all four methods; `sweep` knob shows the
+  token budget for MCTS rows.
+
+**How it was verified (cold, no model) — and the honest result:**
+- `ruff` clean; `mypy src` clean (37 files); `pytest` → **91 passed** (4 new).
+- The ladder curve: pass1 0%; **beam reaches 100% at ~1.1k tok, best-of-N at ~2.4k,
+  MCTS at ~6k**. So on this *easy, shallow* synthetic task **MCTS is the most expensive**
+  method — it saturates but slower than beam. This is reported honestly (not hidden): it
+  matches DESIGN's framing ("MCTS: the most compute, the best on hard problems") — its
+  adaptive-allocation edge over beam shows on deep/hard trees with rare good steps, a
+  real-model phenomenon this toy doesn't reproduce. Tests assert the true invariants
+  (needs a PRM, solves at sufficient budget, more budget → more tokens & not-worse
+  accuracy, counts policy + verifier compute) — **not** an unearned "MCTS beats beam."
+
+**Gotchas / notes:**
+- First MCTS build evaluated only one child per expansion → too noisy (4/6). Fixed by
+  evaluating every new child to seed its Q (expand-and-evaluate), which reliably reaches
+  the all-good chain.
+- MCTS always spends the full `budget_tokens` (no early stopping) — deliberately simple;
+  an early-stop on PRM-confidence would make its curve more favourable but needs a
+  PRM-scale threshold, deferred to avoid a magic number.
 
 ## M5 — Code track (sandboxed execution) · built 2026-06-28 · self-verified cold
 

@@ -93,10 +93,16 @@ unchecked milestone.
   `datasets` extra) reports pass@1 + best-of-N from real test execution.
 
 - [ ] **M6 — MCTS over reasoning steps.** UCT/PUCT with the PRM as value:
-  selection / expansion / rollout / backup. Compare MCTS vs beam vs best-of-N at
-  **matched compute** — the most expressive, most expensive method.
-  **Test:** `crucible run --method mcts --budget-tokens 8000 --dataset math500 ...`
-  matches or beats beam on the hard subset at equal total tokens.
+  selection / expansion / evaluation / backup over the step tree, budgeted by total
+  tokens. The full search ladder, plotted together.
+  _(Built and self-verified 2026-06-28 — MCTS saturates the synthetic stepwise task; on
+  this easy/shallow task it's the **most expensive** of the tree methods (honest result:
+  beam ≈1.1k tok, best-of-N ≈2.4k, MCTS ≈6k to reach 100%). Its edge over beam is a
+  hard-problem/real-model phenomenon. Run a real-model MCTS, then check this box.)_
+  **Test (offline, runs cold):** `crucible sweep configs/beam-sweep.yaml` plots all four
+  methods; MCTS reaches 100% (at higher compute than beam). **Real-model variant:**
+  `crucible run --method mcts --budget-tokens 8000 --dataset math500 --policy ollama
+  --prm <qwen-prm>` should match or beat beam on the *hard* subset at equal tokens.
 
 ## Phase 3 — The deliverable
 

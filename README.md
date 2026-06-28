@@ -9,13 +9,13 @@ Most people only *consume* reasoning models; Crucible builds the machinery under
 and **measures the lift** — accuracy as a function of test-time compute over a small
 open policy model. The full design and rationale live in [DESIGN.md](DESIGN.md).
 
-**Status:** **M0 shipped; M1–M5 built.** The engine runs end-to-end offline, runs real
-pass@1 on GSM8K/MATH-500 via Ollama (M1, awaiting a live test), produces the
-**accuracy-vs-compute curve** for best-of-N (M2), exposes the **PRM selection gap** (M3),
-runs **PRM-guided beam search** that beats best-of-N at matched compute (M4), and adds a
-**code track** with a sandboxed (opt-in) execution verifier + HumanEval/MBPP (M5) —
-M2–M5 self-verified on synthetic/bundled backends. See [ROADMAP.md](ROADMAP.md) and
-[PROGRESS.md](PROGRESS.md). Next: M6 (MCTS over reasoning steps).
+**Status:** **M0 shipped; M1–M6 built — the full search ladder is in.** The engine runs
+end-to-end offline, runs real pass@1 on GSM8K/MATH-500 via Ollama (M1, awaiting a live
+test), and implements **best-of-N** (M2), **PRM-weighted selection + the selection gap**
+(M3), **PRM-guided beam/DVTS** (M4), a sandboxed **code track** (M5), and **MCTS over
+reasoning steps** (M6) — all behind one policy/verifier/search interface, plotted on one
+accuracy-vs-compute curve. M2–M6 self-verified on synthetic/bundled backends. See
+[ROADMAP.md](ROADMAP.md) and [PROGRESS.md](PROGRESS.md). Next: M7 (the results report).
 
 ---
 
@@ -60,11 +60,11 @@ best-of-N samples (offline, mock PRM):
 python -m crucible compare   # writes runs/compare-*/comparison.png (oracle >= prm >= majority)
 ```
 
-**Beam vs best-of-N at matched compute (M4):** PRM-guided beam search on a synthetic
-stepwise task, offline:
+**The full search ladder at matched compute (M4/M6):** pass1 vs best-of-N vs beam vs
+MCTS on a synthetic stepwise task, offline:
 
 ```powershell
-python -m crucible sweep configs/beam-sweep.yaml   # beam line beats best-of-N on the curve
+python -m crucible sweep configs/beam-sweep.yaml   # one curve, all four methods
 ```
 
 **The code track (M5):** execute model-generated code against unit tests in a
