@@ -1,29 +1,42 @@
-# The headline sweep: the accuracy-vs-compute "lift curve" (DESIGN.md §1, §8 M6).
+# The full REAL-model headline sweep: the accuracy-vs-compute "lift curve" on a frozen
+# small open model + a real PRM, MATH-500, 3 seeds, the whole search ladder. This is the
+# artifact DESIGN §1 is really after — the synthetic configs (results.yaml) only prove the
+# machinery; this proves the lift on a real model.
 #
-# NOTE: `crucible sweep` is implemented in M2. This file documents the intended grid
-# so it's ready when the command lands — it is not consumed yet.
+# Needs a single NVIDIA GPU (~16-24 GB) to be comfortable — see "suitable machine" in the
+# README. On CPU-only or a smaller GPU, start from configs/real-quickstart.yaml instead.
 #
-# The sweep runs every (method × compute-budget) cell on the same problems + seeds and
-# plots accuracy against total generated tokens (policy + verifier).
-
+# Prereqs:
+#   pip install -e ".[datasets,prm]"
+#   ollama serve            # (and: ollama pull qwen2.5-math-7b-instruct)
+# Run:
+#   crucible sweep configs/lift-curve.yaml
+#   crucible report runs/sweep-<timestamp>          # frontier table + re-rendered curve
+#   crucible compare --policy ollama --model qwen2.5-math-7b-instruct \
+#       --dataset math500 --prm Qwen/Qwen2.5-Math-PRM-7B --n 16   # the selection gap
+#
+# Family-matched baseline: a Qwen policy with a Qwen PRM (DESIGN §9). Keep the policy a
+# NON-reasoning instruct model so the external search lift is visible.
 dataset: math500
 limit: 100
 seeds: [0, 1, 2]
-
 policy:
   backend: ollama
   model: qwen2.5-math-7b-instruct
-
-prm: qwen2.5-math-prm-7b
+prm: Qwen/Qwen2.5-Math-PRM-7B
 
 grid:
   - method: pass1
   - method: best_of_n
+    selection: prm
     n: [4, 8, 16, 32]
   - method: beam
-    beam_width: [4]
-    n: [4, 8, 16]
+    beam_expansions: 4
+    max_steps: 12
+    beam_width: [2, 4, 8]
   - method: mcts
+    beam_expansions: 4
+    max_steps: 12
     budget_tokens: [4000, 8000, 16000]
 
 output_dir: runs

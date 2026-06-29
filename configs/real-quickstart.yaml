@@ -1,0 +1,33 @@
+# First REAL-model run — small models, a small MATH-500 slice. Runs on CPU (slowly) or
+# any small GPU; confirms the Ollama policy + transformers-PRM path end-to-end before you
+# scale up to 7B. This is the gentle "does the real pipeline work?" check.
+#
+# Prereqs:
+#   pip install -e ".[datasets,prm]"
+#   ollama serve            # (and: ollama pull qwen2.5-math-1.5b-instruct)
+# Run:
+#   crucible sweep configs/real-quickstart.yaml
+#   crucible report runs/sweep-<timestamp>          # re-print frontier + curve
+#
+# The PRM here is a small open process-reward model (family-ish match to the Qwen policy).
+# Heads-up: the real PRMVerifier tensor wiring is unrun in CI — confirm the per-step
+# scores look sane on the model card the first time (DESIGN §9).
+dataset: math500
+limit: 25
+seeds: [0]
+policy:
+  backend: ollama
+  model: qwen2.5-math-1.5b-instruct
+prm: Skywork/Skywork-o1-Open-PRM-Qwen-2.5-1.5B
+
+grid:
+  - method: pass1
+  - method: best_of_n
+    selection: prm
+    n: [4, 8, 16]
+  - method: beam
+    beam_expansions: 4
+    max_steps: 10
+    beam_width: [2, 4]
+
+output_dir: runs
