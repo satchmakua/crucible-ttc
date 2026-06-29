@@ -124,3 +124,29 @@ unchecked milestone.
 **North star:** a credible **accuracy-vs-compute curve** showing search + verification
 lifts a small open model well above its pass@1 on math (and code), with the verifier's
 compute counted — the result is honest enough to trust.
+
+---
+
+## Review-driven hardening — from *built* to *proven* (added 2026-06-28)
+
+> Added after an external code review (captured in `../ai-docs/project_eval/`). The
+> ladder (M0–M7) is built and the **real-model variants are already written into the
+> Test steps above** — they are simply unchecked. This project is a *measurement
+> instrument that has not yet taken a real measurement*; these items make executing it
+> the priority and define the artifact. **Standing rule:** a milestone is checked only
+> when it has produced **one real, captured, reproducible artifact**, not a synthetic one.
+
+**Definition of Done — the "Sparkle Bar"** (applies to every milestone):
+1. **Real artifact captured** — produced against a real model/PRM/dataset, pinned at the top of the README with the exact reproduce command.
+2. **Flagship demo in one screen** — the real accuracy-vs-compute curve + frontier.
+3. **Stress-tested** — adversarial tests on the search strategies, not just happy-path units.
+4. **Honest numbers** — Wilson CIs, a named baseline, an explicit "can't do" list.
+5. **Cold-clone reproducible** — pinned deps, fixed seeds, one `make demo`, CI runs the real-or-recorded path.
+6. **Polished** — no stray files, consistent docs, README opens with the artifact.
+7. **Positioned** — one paragraph: who it's for, what it beats, why this not the obvious alternative.
+
+**Hardening items (Crucible-specific):**
+- [ ] **H1 — Execute the real-model variants; lead with them.** Run the M1/M2/M4/M6/M7 "Real-model variant" Tests on Ollama (**Qwen2.5-Math-1.5B-Instruct**) + a real open PRM (e.g. Qwen2.5-Math-PRM / Skywork) on **MATH-500** (graded; the beam-beats-best-of-N crossover only shows on the hard subset). *Accept:* `docs/RESULTS.md` and the README **lead with a real ≥3-seed MATH-500 accuracy-vs-compute curve with Wilson CIs** showing search lifting the 1.5B policy, frontier overlaid; the synthetic curves are demoted to "mechanism validation."
+- [ ] **H2 — The "small-beats-big" headline.** Add a named bigger-model baseline (run pass@1 of e.g. a 7B/14B instruct on the same MATH-500 subset) and show **1.5B + compute-optimal search matches/beats it at the measured compute** (the Snell 2024 / "Can 1B Surpass 405B?" result). *Accept:* a one-line claim in RESULTS.md backed by both runs + the frontier table.
+- [ ] **H3 — Record real runs as fixtures.** Cassette the real model/PRM calls so the headline curve regenerates in CI without a GPU. *Accept:* an offline/CI path reproduces the real numbers from committed fixtures.
+- [ ] **H4 — Stress the search strategies.** Adversarial tests: degenerate beams (width 1, all-terminal), empty/tied PRM scores, MCTS budget exhaustion, single-candidate expansions. *Accept:* added tests pass; raise search-module coverage.
