@@ -50,3 +50,21 @@ def test_run_sweep_writes_curve_and_shows_lift(tmp_path: Path) -> None:
     assert oracle16["accuracy"] >= pass1["accuracy"]
     # ...and it spends roughly 16x the per-problem tokens to do so.
     assert oracle16["mean_tokens"] > pass1["mean_tokens"]
+
+
+def test_multi_seed_sweep_pools_results(tmp_path: Path) -> None:
+    cfg = {
+        "dataset": "sample",
+        "seeds": [0, 1, 2],
+        "synthetic_accuracy": 0.5,
+        "policy": {"backend": "synthetic", "model": "sim"},
+        "grid": [{"method": "pass1"}],
+        "output_dir": str(tmp_path),
+    }
+    path = tmp_path / "sweep.yaml"
+    path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+    result = run_sweep(path)
+    cell = result.cells[0]
+    assert cell["seeds"] == 3
+    assert cell["total"] == 6 * 3  # 6 sample problems × 3 seeds, pooled

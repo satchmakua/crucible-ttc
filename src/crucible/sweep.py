@@ -2,16 +2,18 @@
 
 A sweep YAML is the base run config plus a ``grid:`` list. Each grid cell overrides the
 base; any list-valued field in a cell (e.g. ``n: [4, 8, 16]``) is expanded into the
-cartesian product of runs. Every run writes its own record under the sweep directory,
-and the cells are aggregated into ``sweep.json`` + ``curve.png`` — the headline
-artifact (DESIGN.md §1, §6.4).
+cartesian product of runs. An optional ``seeds: [...]`` list runs every cell once per
+seed and **pools** the results (problems × seeds), so accuracy comes with a proper
+Wilson CI over more samples. Every run writes its own record under the sweep directory,
+and the pooled cells are aggregated into ``sweep.json`` + ``curve.png`` (with the
+compute-optimal frontier overlaid) — the headline artifact (DESIGN.md §1, §6.4).
 """
 
 from __future__ import annotations
 
 import itertools
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -21,6 +23,7 @@ import yaml
 from crucible.config import RunConfig
 from crucible.report import render_curve, write_run_record
 from crucible.runner import RunSummary, run
+from crucible.stats import wilson_interval
 
 
 def expand_grid(base: dict[str, Any], grid: list[dict[str, Any]]) -> list[RunConfig]:
@@ -40,29 +43,38 @@ def expand_grid(base: dict[str, Any], grid: list[dict[str, Any]]) -> list[RunCon
     return configs
 
 
-def cell_metrics(summary: RunSummary) -> dict[str, Any]:
-    """One row of the sweep table — accuracy and mean per-problem compute."""
-    low, high = summary.accuracy_ci
-    denom = summary.total or 1
-    # The knob that varies along a method's line: beam width for beam, token budget for
-    # mcts, else N samples.
-    cfg = summary.config
+def _knob(cfg: RunConfig) -> int:
+    """The value that varies along a method's line (for the table + grouping)."""
     if cfg.method == "beam":
-        knob = cfg.beam_width
-    elif cfg.method == "mcts":
-        knob = cfg.budget_tokens or 0
-    else:
-        knob = cfg.n
+        return cfg.beam_width
+    if cfg.method == "mcts":
+        return cfg.budget_tokens or 0
+    return cfg.n
+
+
+def _cell_key(cfg: RunConfig) -> tuple[str, str, int]:
+    return (cfg.method, cfg.selection, _knob(cfg))
+
+
+def aggregate_cell(summaries: list[RunSummary]) -> dict[str, Any]:
+    """Pool a cell's runs (across seeds) into one row with a Wilson CI."""
+    cfg = summaries[0].config
+    results = [r for s in summaries for r in s.results]
+    total = len(results)
+    correct = sum(1 for r in results if r.correct)
+    low, high = wilson_interval(correct, total)
+    tokens = sum(r.compute.total_tokens for r in results)
     return {
-        "method": summary.config.method,
-        "selection": summary.config.selection,
-        "n": knob,
-        "total": summary.total,
-        "correct": summary.correct,
-        "accuracy": summary.accuracy,
+        "method": cfg.method,
+        "selection": cfg.selection,
+        "n": _knob(cfg),
+        "seeds": len(summaries),
+        "total": total,
+        "correct": correct,
+        "accuracy": correct / total if total else 0.0,
         "accuracy_ci_low": low,
         "accuracy_ci_high": high,
-        "mean_tokens": summary.total_compute.total_tokens / denom,
+        "mean_tokens": tokens / total if total else 0.0,
     }
 
 
@@ -74,7 +86,7 @@ class SweepResult:
 
 
 def run_sweep(config_path: str | Path) -> SweepResult:
-    """Run every cell of a sweep config and write records + sweep.json + curve.png."""
+    """Run every cell (× every seed) and write records + sweep.json + curve.png."""
     with open(config_path, encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     if not isinstance(data, dict):
@@ -83,19 +95,25 @@ def run_sweep(config_path: str | Path) -> SweepResult:
     grid = data.get("grid") or []
     if not grid:
         raise ValueError("sweep config needs a non-empty 'grid:' list")
-    base = {str(k): v for k, v in data.items() if k != "grid"}
+    base = {str(k): v for k, v in data.items() if k not in ("grid", "seeds")}
+    seeds = list(data.get("seeds") or [base.get("seed", 0)])
     output_dir = str(base.get("output_dir", "runs"))
     configs = expand_grid(base, list(grid))
 
     sweep_dir = Path(output_dir) / datetime.now().strftime("sweep-%Y-%m-%dT%H-%M-%S")
     sweep_dir.mkdir(parents=True, exist_ok=True)
 
-    cells: list[dict[str, Any]] = []
+    groups: dict[tuple[str, str, int], list[RunSummary]] = {}
     for i, cfg in enumerate(configs):
-        summary = run(cfg)
-        name = f"{i:03d}-{cfg.method}-{cfg.selection}-n{cfg.n}"
-        write_run_record(summary, base_dir=sweep_dir, name=name)
-        cells.append(cell_metrics(summary))
+        for seed in seeds:
+            scfg = replace(cfg, seed=seed)
+            summary = run(scfg)
+            name = f"{i:03d}-{scfg.method}-{scfg.selection}-n{_knob(scfg)}-seed{seed}"
+            write_run_record(summary, base_dir=sweep_dir, name=name)
+            groups.setdefault(_cell_key(scfg), []).append(summary)
+
+    cells = [aggregate_cell(summaries) for summaries in groups.values()]
+    cells.sort(key=lambda c: (c["method"], c["mean_tokens"]))
 
     (sweep_dir / "sweep.json").write_text(json.dumps(cells, indent=2), encoding="utf-8")
     curve_path = render_curve(cells, sweep_dir / "curve.png")

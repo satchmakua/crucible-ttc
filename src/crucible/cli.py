@@ -23,6 +23,7 @@ from crucible import __version__
 from crucible.config import PolicyConfig, RunConfig
 from crucible.report import (
     print_comparison,
+    print_frontier,
     print_record,
     print_summary,
     print_sweep,
@@ -119,6 +120,7 @@ def report(
     if sweep_json.exists():
         cells = json.loads(sweep_json.read_text(encoding="utf-8"))
         print_sweep(cells, console)
+        print_frontier(cells, console)
         curve = render_curve(cells, run_dir / "curve.png")
         console.print(f"[green]curve:[/green] {curve}")
         return
@@ -149,6 +151,7 @@ def sweep(
         raise typer.Exit(code=1) from exc
 
     print_sweep(result.cells, console)
+    print_frontier(result.cells, console)
     console.print(f"[green]curve:[/green] {result.curve_path}")
     console.print(f"[green]sweep:[/green] {result.sweep_dir}")
 

@@ -1,0 +1,35 @@
+# The headline accuracy-vs-compute sweep, offline and multi-seed (the M7 deliverable).
+#   crucible sweep configs/results.yaml && crucible report runs/sweep-<...>
+#
+# The full search ladder on the synthetic stepwise task (a 5-step chain, p=0.6/step),
+# across 3 seeds so the curve carries real Wilson CIs. The dashed line on the plot is the
+# compute-optimal frontier — the best accuracy any method reaches at each token budget.
+#
+# This is a *mechanism* demonstration on a simulator; the real artifact is the same sweep
+# pointed at `policy: {backend: ollama, model: qwen2.5-math-...}` with a real `prm:` on a
+# GPU. See docs/RESULTS.md.
+dataset: sample
+seeds: [0, 1, 2]
+prm: step
+step_accuracy: 0.6
+step_depth: 5
+step_prm_accuracy: 0.95
+policy:
+  backend: stepwise
+  model: sim
+
+grid:
+  - method: pass1
+  - method: best_of_n
+    selection: prm
+    n: [4, 8, 16, 32, 64]
+  - method: beam
+    beam_expansions: 4
+    max_steps: 8
+    beam_width: [1, 2, 4, 8]
+  - method: mcts
+    beam_expansions: 4
+    max_steps: 8
+    budget_tokens: [2000, 4000, 6000]
+
+output_dir: runs

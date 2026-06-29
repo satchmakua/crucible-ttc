@@ -106,13 +106,18 @@ unchecked milestone.
 
 ## Phase 3 — The deliverable
 
-- [ ] **M7 — Compute-optimal & the report.** Per-difficulty strategy selection
-  (Snell-style), full accuracy-vs-compute curves with seeds + CIs, ablations (verifier
-  on/off, PRM vs outcome, segmentation), and a written results report with the
-  headline plot.
-  **Test:** `crucible sweep configs/lift-curve.yaml && crucible report <run>` produces
-  the final accuracy-vs-compute figure + tables; a short `docs/RESULTS.md` interprets
-  the lift honestly.
+- [ ] **M7 — Compute-optimal & the report.** The **compute-optimal frontier** (best
+  method at each budget — Snell-style), multi-seed curves with Wilson CIs, per-difficulty
+  analysis, and a written results report with the headline plot.
+  _(Built and self-verified 2026-06-28 — `analyze.compute_optimal_frontier` +
+  `accuracy_by_difficulty`, multi-seed pooled sweeps, the frontier overlaid on the curve,
+  and `docs/RESULTS.md`. Run the sweep on a real backend to fill in real numbers, then
+  check this box.)_
+  **Test (offline, runs cold):** `crucible sweep configs/results.yaml` (3 seeds, full
+  ladder) → `curve.png` with the dashed compute-optimal frontier + a frontier table;
+  [`docs/RESULTS.md`](docs/RESULTS.md) interprets the lift honestly (pass@1 ~11% → 100%
+  with search; beam compute-optimal here; MCTS honestly the most expensive). **Real
+  artifact:** the same sweep with `backend: ollama` + a real `prm:` on MATH-500.
 
 ---
 

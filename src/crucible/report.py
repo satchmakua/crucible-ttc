@@ -184,6 +184,20 @@ def print_sweep(cells: list[dict[str, Any]], console: Console | None = None) -> 
     console.print(table)
 
 
+def print_frontier(cells: list[dict[str, Any]], console: Console | None = None) -> None:
+    """Print the compute-optimal frontier: best method + accuracy at each budget step."""
+    from crucible.analyze import compute_optimal_frontier
+
+    console = console or Console()
+    table = Table(title="compute-optimal frontier", title_style="bold")
+    table.add_column("tokens/problem", justify="right")
+    table.add_column("best method")
+    table.add_column("accuracy", justify="right")
+    for cell in compute_optimal_frontier(cells):
+        table.add_row(f"{cell['mean_tokens']:.0f}", _curve_label(cell), f"{cell['accuracy']:.1%}")
+    console.print(table)
+
+
 def render_curve(cells: list[dict[str, Any]], out_path: str | Path) -> Path:
     """Render the accuracy-vs-compute curve (one line per method/selector) to a PNG."""
     import matplotlib
@@ -206,6 +220,21 @@ def render_curve(cells: list[dict[str, Any]], out_path: str | Path) -> Path:
         yerr_lo = [max(0.0, c["accuracy"] - c["accuracy_ci_low"]) for c in pts]
         yerr_hi = [max(0.0, c["accuracy_ci_high"] - c["accuracy"]) for c in pts]
         ax.errorbar(xs, ys, yerr=[yerr_lo, yerr_hi], marker="o", capsize=3, label=label)
+
+    # Overlay the compute-optimal frontier (best accuracy achievable at each budget).
+    from crucible.analyze import compute_optimal_frontier
+
+    frontier = compute_optimal_frontier(cells)
+    if len(frontier) > 1:
+        ax.plot(
+            [c["mean_tokens"] for c in frontier],
+            [c["accuracy"] for c in frontier],
+            color="black",
+            linestyle="--",
+            linewidth=1.0,
+            alpha=0.7,
+            label="compute-optimal",
+        )
 
     ax.set_xscale("log")
     ax.set_xlabel("total tokens per problem (policy + verifier)")

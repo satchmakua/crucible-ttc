@@ -5,9 +5,10 @@ this is the working memory between build sessions. The forward-looking plan and
 acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 "what got done and why" companion.
 
-**Current phase:** M1–M6 built (M1 awaits a live-Ollama test; M2–M6 self-verified cold).
-The full search ladder (pass1 → best-of-N → beam → MCTS) is implemented. Next up: **M7**
-(compute-optimal analysis + the written results report — the deliverable).
+**Current phase:** **M1–M7 built** — the roadmap is complete (M1 awaits a live-Ollama
+test; M2–M7 self-verified cold). The full search ladder + the compute-optimal report are
+in. Remaining work is *real-model runs* (the human's): confirm M1, then run the sweeps on
+Ollama + a real PRM to turn the synthetic curves into real ones. Then `git`.
 
 ## State of the tree
 
@@ -36,11 +37,45 @@ The full search ladder (pass1 → best-of-N → beam → MCTS) is implemented. N
 | Code datasets: bundled + HumanEval/MBPP | `data/code_sample.py`, `data/hf.py` | ✅ M5 |
 | Experiment runner | `runner.py` | ✅ M0 |
 | Run records (JSON/CSV) + summary | `report.py` | ✅ M0 |
-| Sweep + accuracy-vs-compute curve | `sweep.py`, `report.py` | ✅ M2 |
+| Sweep (multi-seed) + accuracy-vs-compute curve | `sweep.py`, `report.py` | ✅ M2/M7 |
 | Selection-gap comparison + bar chart | `runner.run_comparison`, `report.py` | ✅ M3 |
-| CLI (run/report/sweep/compare/version) | `cli.py` | ✅ M3 (all real) |
+| Compute-optimal frontier + per-difficulty | `analyze.py` | ✅ M7 |
+| Results report | `docs/RESULTS.md` | ✅ M7 |
+| CLI (run/report/sweep/compare/version) | `cli.py` | ✅ (all real) |
 
 ---
+
+## M7 — Compute-optimal & the results report · built 2026-06-28 · self-verified cold
+
+The deliverable: the analysis layer that turns the search ladder into a *credible*
+result, and the written report that interprets it honestly.
+
+**What shipped:**
+- **`analyze.py`**: `compute_optimal_frontier(cells)` (the upper-left envelope of
+  accuracy vs total tokens — at each budget, the best method and accuracy; the Snell
+  compute-optimal result) and `accuracy_by_difficulty(results)` (per-difficulty buckets,
+  meaningful on graded datasets like MATH-500).
+- **Multi-seed sweeps**: `seeds: [...]` runs each cell once per seed and **pools** the
+  per-problem results (problems × seeds), so accuracy carries a tighter Wilson CI.
+- **The frontier on the curve**: `render_curve` overlays the compute-optimal frontier as
+  a dashed line; `report`/`sweep` print a frontier table (`tokens → best method → acc`).
+- **`configs/results.yaml`**: the cold, 3-seed, full-ladder headline sweep.
+- **`docs/RESULTS.md`**: the written report — the lift (pass@1 ~11% → 100% with search),
+  the compute-optimal frontier (beam wins here), the PRM selection gap, the code track,
+  threats to validity, and how to reproduce on real models. Honest up front that the
+  numbers are from simulators, with the real-model recipe spelled out.
+
+**How it was verified (cold):**
+- `ruff` clean; `mypy src` clean (38 files); `pytest` → **95 passed** (5 new).
+- `crucible sweep configs/results.yaml` (3 seeds) → `curve.png` with the dashed frontier
+  and CIs; the frontier table reads pass1 (38 tok, 11%) → best_of_n (304, 17%) → beam
+  (584/1112/2168 tok → 72/94/100%). Tests pin the frontier (non-dominated points only,
+  monotone accuracy), per-difficulty bucketing, and multi-seed pooling (cell total =
+  problems × seeds).
+
+**Note:** this closes the roadmap's build phase. What's left is **real-model runs** (the
+human's): the synthetic curves are mechanism checks; the same configs with `backend:
+ollama` + a real `prm:` on MATH-500 produce the real artifact (RESULTS.md §Reproducing).
 
 ## M6 — MCTS over reasoning steps · built 2026-06-28 · self-verified cold
 

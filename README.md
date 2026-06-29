@@ -9,13 +9,14 @@ Most people only *consume* reasoning models; Crucible builds the machinery under
 and **measures the lift** — accuracy as a function of test-time compute over a small
 open policy model. The full design and rationale live in [DESIGN.md](DESIGN.md).
 
-**Status:** **M0 shipped; M1–M6 built — the full search ladder is in.** The engine runs
-end-to-end offline, runs real pass@1 on GSM8K/MATH-500 via Ollama (M1, awaiting a live
-test), and implements **best-of-N** (M2), **PRM-weighted selection + the selection gap**
-(M3), **PRM-guided beam/DVTS** (M4), a sandboxed **code track** (M5), and **MCTS over
-reasoning steps** (M6) — all behind one policy/verifier/search interface, plotted on one
-accuracy-vs-compute curve. M2–M6 self-verified on synthetic/bundled backends. See
-[ROADMAP.md](ROADMAP.md) and [PROGRESS.md](PROGRESS.md). Next: M7 (the results report).
+**Status:** **The roadmap is built (M0–M7).** Behind one policy/verifier/search interface:
+real pass@1 via Ollama (M1, awaiting a live test), **best-of-N** (M2), **PRM-weighted
+selection + the selection gap** (M3), **PRM-guided beam/DVTS** (M4), a sandboxed **code
+track** (M5), **MCTS over reasoning steps** (M6), and the **compute-optimal report** —
+multi-seed curves with CIs + the optimal-method-by-budget frontier (M7). M2–M7 are
+self-verified cold on simulators; the real-model runs (Ollama + a PRM on a GPU) are the
+remaining step. See [docs/RESULTS.md](docs/RESULTS.md), [ROADMAP.md](ROADMAP.md), and
+[PROGRESS.md](PROGRESS.md).
 
 ---
 
@@ -67,6 +68,13 @@ MCTS on a synthetic stepwise task, offline:
 python -m crucible sweep configs/beam-sweep.yaml   # one curve, all four methods
 ```
 
+**The headline report (M7):** the multi-seed ladder with Wilson CIs + the compute-optimal
+frontier; interpreted in [docs/RESULTS.md](docs/RESULTS.md):
+
+```powershell
+python -m crucible sweep configs/results.yaml   # 3 seeds; curve.png has the dashed frontier
+```
+
 **The code track (M5):** execute model-generated code against unit tests in a
 locked-down sandbox. Execution is **off by default** — pass `--allow-code-exec`:
 
@@ -106,6 +114,7 @@ You mainly **test and report**:
 | Doc | What's in it |
 |---|---|
 | [DESIGN.md](DESIGN.md) | The full design and rationale — the single source of truth. |
+| [docs/RESULTS.md](docs/RESULTS.md) | The results report — the lift curve, interpreted honestly. |
 | [ROADMAP.md](ROADMAP.md) | The milestone checklist (the plan + what's done). |
 | [PROGRESS.md](PROGRESS.md) | Build log: what shipped each milestone and why. |
 | [CLAUDE.md](CLAUDE.md) | Standing instructions for the AI build loop. |
