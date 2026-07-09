@@ -7,8 +7,8 @@ acceptance tests live in [ROADMAP.md](ROADMAP.md); this is the backward-looking
 
 **Current phase:** **M1–M7 built** — the roadmap is complete (M1 awaits a live-Ollama
 test; M2–M7 self-verified cold). The full search ladder + the compute-optimal report are
-in. Remaining work is *real-model runs* (the human's): confirm M1, then run the sweeps on
-Ollama + a real PRM to turn the synthetic curves into real ones. Then `git`.
+in. Remaining work is *real-model runs*: confirm M1, then run the sweeps on
+Ollama + a real PRM to turn the synthetic curves into real ones.
 
 ## State of the tree
 
@@ -73,8 +73,8 @@ result, and the written report that interprets it honestly.
   monotone accuracy), per-difficulty bucketing, and multi-seed pooling (cell total =
   problems × seeds).
 
-**Note:** this closes the roadmap's build phase. What's left is **real-model runs** (the
-human's): the synthetic curves are mechanism checks; the same configs with `backend:
+**Note:** this closes the roadmap's build phase. What's left is **real-model runs**:
+the synthetic curves are mechanism checks; the same configs with `backend:
 ollama` + a real `prm:` on MATH-500 produce the real artifact (RESULTS.md §Reproducing).
 
 ## M6 — MCTS over reasoning steps · built 2026-06-28 · self-verified cold

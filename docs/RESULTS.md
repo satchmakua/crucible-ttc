@@ -10,7 +10,7 @@
 not on a real LLM. That is deliberate: it lets the *mechanism* and the *measurement* be
 verified end-to-end with no GPU or network, on every commit. The real artifact is the
 identical analysis pointed at a frozen open model (Qwen2.5-Math-Instruct via Ollama) and
-a real open PRM — that run is the human's to do (the machinery is ready; see
+a real open PRM — that run remains to be done (the machinery is ready; see
 [Reproducing](#reproducing)). Read these as "the harness measures the right things
 correctly," not "model X scores Y."
 

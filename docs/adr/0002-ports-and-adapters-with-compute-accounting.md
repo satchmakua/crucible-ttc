@@ -34,7 +34,7 @@ multiple datasets (GSM8K, MATH-500, HumanEval, MBPP). Two failure modes loom:
 ## Consequences
 
 - The core is testable with a `ScriptedPolicy` and a `MockVerifier` — no GPU, no
-  network — which is what makes M0 run and the build loop fast.
+  network — which is what makes M0 run and iteration fast.
 - Adding Ollama/vLLM/PRM/MCTS is additive; the strategy code is untouched.
 - A small tax: every adapter must honestly report its token/call counts, and the
   `Compute` type must be threaded through. This is deliberate — it is the honesty

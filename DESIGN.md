@@ -98,7 +98,7 @@ consumer hardware and measures it honestly.
 | Search core | **Custom** (best-of-N, beam, MCTS) | This is the project's actual IP; no library should own it. |
 | Reporting | **pandas + matplotlib**; JSON / CSV / Markdown | The deliverable is the accuracy-vs-compute plot + tables; mirror `llm-eval-harness` report artifacts. |
 | Config / CLI | **YAML** + **Typer** | Config-driven reproducibility (cf. `lmeval.config.yaml`); a small CLI front door. |
-| Quality | **pytest · ruff · mypy** | Cheap guardrails the build loop runs every milestone. |
+| Quality | **pytest · ruff · mypy** | Cheap guardrails run every milestone. |
 
 *Versions verified 2026-06-27; pin exact versions at scaffold time and re-check.*
 

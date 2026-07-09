@@ -1,16 +1,15 @@
 # ROADMAP — Crucible
 
-The milestone checklist. Standing instruction: **"continue"** → build the next
-unchecked milestone.
+The milestone checklist. Build the next unchecked milestone in order.
 
 **Rules of the road:**
-- Each milestone is an **independently runnable** slice — something the human can
-  actually test, not an internal-only refactor.
+- Each milestone is an **independently runnable** slice — something actually
+  testable end-to-end, not an internal-only refactor.
 - Every milestone ends with explicit **Test** steps: what to do and what should
   happen. These are the acceptance criteria.
 - Build **top-down**: a thin end-to-end slice first, then deepen each rung of the
   search ladder. Counts/scopes are budgets, not promises — split if one grows too big.
-- Check a box **only after the human confirms its Test passes**, then add a
+- Check a box **only after its Test passes**, then add a
   `PROGRESS.md` entry.
 
 > These mirror the ladder in [DESIGN.md §8](DESIGN.md). M0 here is the **offline

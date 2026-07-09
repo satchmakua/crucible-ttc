@@ -101,7 +101,7 @@ milestone: `".[datasets]"` (M1), `".[prm]"` (M3), `".[vllm]"`.
 
 ## How to give feedback
 
-You mainly **test and report**:
+When reporting an issue or a run:
 
 - Run the **Test** steps for the current milestone in [ROADMAP.md](ROADMAP.md).
 - Describe what happened in plain language; paste any errors verbatim (the single most
@@ -117,7 +117,7 @@ You mainly **test and report**:
 | [docs/RESULTS.md](docs/RESULTS.md) | The results report — the lift curve, interpreted honestly. |
 | [ROADMAP.md](ROADMAP.md) | The milestone checklist (the plan + what's done). |
 | [PROGRESS.md](PROGRESS.md) | Build log: what shipped each milestone and why. |
-| [CLAUDE.md](CLAUDE.md) | Standing instructions for the AI build loop. |
+| [CLAUDE.md](CLAUDE.md) | Standing build instructions and conventions. |
 | [`docs/`](docs/) | Long-form docs and architecture decisions (ADRs). |
 
 ## Tech stack
