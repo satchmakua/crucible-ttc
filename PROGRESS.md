@@ -47,6 +47,26 @@ synthetic curves into real ones.
 
 ---
 
+## H3 (partial) — Real-run cassettes: a live run replays offline · 2026-06-28
+
+The standing pattern (run live once, commit a fixture, CI reproduces without a GPU) now
+works for the **generation** side. `inference/cassette.py`: `RecordingPolicy` wraps any
+backend and captures problems + traces to a self-contained JSON cassette; `CassettePolicy`
+replays it with no network or model. `crucible run … --record <path>` writes one; the
+runner saves it after the loop.
+
+**Real captured artifact:** `crucible run --dataset gsm8k --policy ollama --model
+qwen2.5:7b-instruct --limit 3 --temperature 0 --record tests/fixtures/gsm8k-m1.json`
+recorded a live run — **qwen2.5:7b-instruct scored 3/3** on the first three GSM8K test
+problems (greedy; gsm8k-2 now correct at 70000, 27 s warm, no TDR). `tests/test_cassette.py`
+replays that 6.8 KB fixture **offline** and reproduces the 3/3 pass@1 — so this real number
+regenerates in CI with no GPU. Also a mock record→replay round-trip test. **117 tests**.
+
+**Still open on H3:** the *PRM* calls aren't cassetted (no GPU run yet), so the headline
+best-of-N/beam **lift curve** doesn't yet regenerate from fixtures — that capture is a
+single `--record` run on the GPU once the PRM is set up. Left unchecked in ROADMAP for that
+reason; the mechanism + the M1 generation fixture are done.
+
 ## H4 — Adversarial hardening of the search core · 2026-06-28 · self-verified cold
 
 An adversarial multi-agent stress test (9 skeptical finders over the search/verification

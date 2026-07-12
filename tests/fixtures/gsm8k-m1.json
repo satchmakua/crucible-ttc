@@ -1,0 +1,154 @@
+{
+  "backend": "ollama",
+  "records": [
+    {
+      "problem": {
+        "id": "gsm8k-0",
+        "prompt": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+        "answer": "18",
+        "difficulty": "grade-school"
+      },
+      "traces": [
+        {
+          "steps": [
+            {
+              "text": "Let's break down the problem step by step.",
+              "token_count": 8
+            },
+            {
+              "text": "1. **Calculate the total number of eggs laid per day:**\n   Janet\u2019s ducks lay 16 eggs per day.",
+              "token_count": 17
+            },
+            {
+              "text": "2. **Determine how many eggs are used for breakfast and baking muffins:**\n   - Janet eats 3 eggs every morning.\n   - She uses 4 eggs to bake muffins each day.",
+              "token_count": 29
+            },
+            {
+              "text": "Therefore, the total number of eggs used is:\n   \\[\n   3 + 4 = 7 \\text{ eggs}\n   \\]",
+              "token_count": 17
+            },
+            {
+              "text": "3. **Calculate the number of eggs remaining after use:**\n   The number of eggs left for selling at the farmers' market is:\n   \\[\n   16 - 7 = 9 \\text{ eggs}\n   \\]",
+              "token_count": 30
+            },
+            {
+              "text": "4. **Determine the revenue from selling the remaining eggs:**\n   Janet sells each egg for $2.",
+              "token_count": 15
+            },
+            {
+              "text": "Therefore, her daily earnings are:\n   \\[\n   9 \\times 2 = 18 \\text{ dollars}\n   \\]",
+              "token_count": 14
+            },
+            {
+              "text": "Thus, the amount of money Janet makes every day at the farmers' market is \\(\\boxed{18}\\) dollars.",
+              "token_count": 16
+            }
+          ],
+          "compute": {
+            "policy_gen_tokens": 240,
+            "policy_forward_calls": 1,
+            "wall_seconds": 14.693442300002062
+          }
+        }
+      ]
+    },
+    {
+      "problem": {
+        "id": "gsm8k-1",
+        "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+        "answer": "3",
+        "difficulty": "grade-school"
+      },
+      "traces": [
+        {
+          "steps": [
+            {
+              "text": "To solve this problem, let's break it down step by step:",
+              "token_count": 11
+            },
+            {
+              "text": "1. **Identify the amount of blue fiber needed**: The problem states that a robe requires 2 bolts of blue fiber.",
+              "token_count": 20
+            },
+            {
+              "text": "2. **Determine the amount of white fiber needed**: It is given that the amount of white fiber required is half that much as the blue fiber. Therefore, we calculate:\n   \\[\n   \\text{White fiber} = \\frac{1}{2} \\times \\text{Blue fiber}\n   \\]\n   Substituting the value of blue fiber:\n   \\[\n   \\text{White fiber} = \\frac{1}{2} \\times 2 = 1 \\text{ bolt}\n   \\]",
+              "token_count": 56
+            },
+            {
+              "text": "3. **Calculate the total amount of fiber needed**: To find the total, we add the bolts of blue and white fiber together:\n   \\[\n   \\text{Total fiber} = \\text{Blue fiber} + \\text{White fiber} = 2 + 1 = 3 \\text{ bolts}\n   \\]",
+              "token_count": 40
+            },
+            {
+              "text": "Therefore, the total number of bolts needed is \\boxed{3}.",
+              "token_count": 9
+            }
+          ],
+          "compute": {
+            "policy_gen_tokens": 231,
+            "policy_forward_calls": 1,
+            "wall_seconds": 5.051003799999307
+          }
+        }
+      ]
+    },
+    {
+      "problem": {
+        "id": "gsm8k-2",
+        "prompt": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+        "answer": "70000",
+        "difficulty": "grade-school"
+      },
+      "traces": [
+        {
+          "steps": [
+            {
+              "text": "To solve this problem, we need to follow these steps:",
+              "token_count": 10
+            },
+            {
+              "text": "1. **Calculate the total cost**: Josh's initial purchase price plus the repair costs.\n2. **Determine the new value of the house after repairs**: The original value increased by 150%.\n3. **Calculate the profit**: Subtract the total cost from the new value of the house.",
+              "token_count": 44
+            },
+            {
+              "text": "Let's go through each step in detail:",
+              "token_count": 7
+            },
+            {
+              "text": "### Step 1: Calculate the Total Cost\nJosh buys a house for $80,000 and spends an additional $50,000 on repairs. Therefore, the total cost is:\n\\[\n80,000 + 50,000 = 130,000\n\\]",
+              "token_count": 32
+            },
+            {
+              "text": "### Step 2: Determine the New Value of the House After Repairs\nThe value of the house increased by 150%. To find the new value, we need to calculate 150% of the original purchase price and add it to the original purchase price.",
+              "token_count": 43
+            },
+            {
+              "text": "First, convert 150% to a decimal:\n\\[\n150\\% = 1.5\n\\]",
+              "token_count": 11
+            },
+            {
+              "text": "Next, multiply the original purchase price by this factor:\n\\[\n80,000 \\times 1.5 = 120,000\n\\]",
+              "token_count": 16
+            },
+            {
+              "text": "Add this increase to the original purchase price to get the new value of the house:\n\\[\n80,000 + 120,000 = 200,000\n\\]",
+              "token_count": 23
+            },
+            {
+              "text": "### Step 3: Calculate the Profit\nSubtract the total cost from the new value of the house:\n\\[\n200,000 - 130,000 = 70,000\n\\]",
+              "token_count": 24
+            },
+            {
+              "text": "Thus, Josh's profit is \\(\\boxed{70000}\\).",
+              "token_count": 5
+            }
+          ],
+          "compute": {
+            "policy_gen_tokens": 390,
+            "policy_forward_calls": 1,
+            "wall_seconds": 6.883232100000896
+          }
+        }
+      ]
+    }
+  ]
+}

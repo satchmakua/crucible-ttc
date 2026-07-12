@@ -67,6 +67,9 @@ def run(
     allow_code_exec: Annotated[
         bool, typer.Option(help="enable the code-execution sandbox (off by default)")
     ] = False,
+    record: Annotated[
+        Path | None, typer.Option(help="record this run's generations to a JSON cassette (H3)")
+    ] = None,
     config: Annotated[
         Path | None, typer.Option("--config", help="YAML config; if given, other flags are ignored")
     ] = None,
@@ -88,6 +91,7 @@ def run(
             prm=prm,
             prm_accuracy=prm_accuracy,
             allow_code_execution=allow_code_exec,
+            record=str(record) if record is not None else None,
             policy=PolicyConfig(
                 backend=policy, model=model, temperature=temperature, max_tokens=max_tokens
             ),

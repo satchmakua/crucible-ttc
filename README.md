@@ -91,6 +91,7 @@ python -m crucible run --dataset code-sample --policy mock --allow-code-exec   #
 | `crucible sweep <config.yaml>` | Grid → the accuracy-vs-compute curve (M2) |
 | `crucible compare` | Majority/PRM/oracle on the same samples → the selection gap (M3) |
 | `crucible run --dataset code-sample --allow-code-exec` | Code track: sandboxed execution (M5) |
+| `crucible run … --record <path>` | Record a live run to a cassette that replays offline in CI (H3) |
 | `crucible version` | Print the version |
 | `ruff check .` · `mypy src` · `pytest` | Lint · typecheck · tests |
 

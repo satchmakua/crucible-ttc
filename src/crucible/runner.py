@@ -15,7 +15,12 @@ from crucible.config import RunConfig
 from crucible.data import CODE_DATASETS, load_dataset, scripts_for
 from crucible.domain.ports import OutcomeVerifier, PolicyModel, ProcessVerifier
 from crucible.domain.types import Compute, Result
-from crucible.inference import OllamaPolicy, ScriptedPolicy, SyntheticPolicy
+from crucible.inference import (
+    OllamaPolicy,
+    RecordingPolicy,
+    ScriptedPolicy,
+    SyntheticPolicy,
+)
 from crucible.prompts import build_code_prompt, build_cot_prompt
 from crucible.search import get_strategy
 from crucible.search.selectors import SELECTORS
@@ -62,8 +67,7 @@ class RunSummary:
         return out
 
 
-def build_policy(config: RunConfig) -> PolicyModel:
-    """Construct the inference adapter named by `config.policy.backend`."""
+def _build_backend(config: RunConfig) -> PolicyModel:
     backend = config.policy.backend
     if backend == "mock":
         return ScriptedPolicy(scripts_for(config.dataset), max_step_tokens=config.max_step_tokens)
@@ -90,6 +94,14 @@ def build_policy(config: RunConfig) -> PolicyModel:
             "use --policy mock (offline) or --policy ollama."
         )
     raise ValueError(f"unknown policy backend '{backend}' (mock | ollama | hosted).")
+
+
+def build_policy(config: RunConfig) -> PolicyModel:
+    """Construct the inference adapter, optionally wrapped to record a cassette (H3)."""
+    policy = _build_backend(config)
+    if config.record:
+        return RecordingPolicy(policy, config.record)
+    return policy
 
 
 def build_outcome_verifier(config: RunConfig) -> OutcomeVerifier:
@@ -150,6 +162,8 @@ def run(config: RunConfig) -> RunSummary:
                 difficulty=problem.difficulty,
             )
         )
+    if isinstance(policy, RecordingPolicy):
+        policy.save()
     return summary
 
 
