@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "crucible"
+name = "crucible-ttc"
 version = "0.1.0"
 description = "A verifier-guided reasoning engine: search (best-of-N, beam, MCTS) over reasoning traces to turn test-time compute into measured accuracy."
 readme = "README.md"
@@ -55,7 +55,7 @@ dev = [
 crucible = "crucible.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/satchamilton/crucible"
+Homepage = "https://github.com/satchmakua/Crucible"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crucible"]

@@ -33,6 +33,11 @@ adversarial fixes ✓). See [ROADMAP.md](ROADMAP.md) and [PROGRESS.md](PROGRESS.
 **Prerequisites:** Python ≥ 3.11 (check: `python --version`). No GPU or network needed
 for the M0 demo; real model backends (Ollama, etc.) come in from M1.
 
+> **Naming:** the project is **Crucible**, distributed on PyPI as **`crucible-ttc`**
+> (ttc = test-time compute), imported as `crucible`, and invoked as `crucible` on the
+> command line (`pip install crucible-ttc` once published; the commands below install
+> from source).
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
