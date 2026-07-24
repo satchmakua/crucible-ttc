@@ -55,7 +55,7 @@ dev = [
 crucible = "crucible.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/satchmakua/Crucible"
+Homepage = "https://github.com/satchmakua/crucible-ttc"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crucible"]
